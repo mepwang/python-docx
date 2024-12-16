@@ -5,6 +5,7 @@ from docx.opc.oxml import parse_xml
 from docx.opc.packuri import PACKAGE_URI, PackURI
 from docx.opc.phys_pkg import PhysPkgReader
 from docx.opc.shared import CaseInsensitiveDict
+import magic
 
 
 class PackageReader:
@@ -51,7 +52,10 @@ class PackageReader:
         sparts = []
         part_walker = PackageReader._walk_phys_parts(phys_reader, pkg_srels)
         for partname, blob, reltype, srels in part_walker:
-            content_type = content_types[partname]
+            try:
+                content_type = content_types[partname]
+            except KeyError:
+                content_type = magic.from_buffer(blob, mime=True)
             spart = _SerializedPart(partname, content_type, reltype, blob, srels)
             sparts.append(spart)
         return tuple(sparts)
